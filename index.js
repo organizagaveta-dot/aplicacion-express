@@ -64,7 +64,24 @@ app.post('/insert', jsonParser, function (req, res) {
     res.status(201).send();
 })
 
+app.post('/agrega_todo', jsonParser, function (req, res) {
+    const { todo } = req.body;
+    if (!todo) {
+        return res.status(400).json({ error: 'El campo todo es requerido.' });
+    }
+    const sql = 'INSERT INTO todos (todo, created_at) VALUES (?, CURRENT_TIMESTAMP)';
+    const stmt = db.prepare(sql);
 
+    stmt.run(todo, function(err) {
+        if (err) {
+            console.error("Error al insertar en la base de datos:", err.message);
+            return res.status(500).json({ error: 'Error interno del servidor.' });
+        }
+        console.log(`Se ha insertado una nueva fila con el ID: ${this.lastID}`);
+        res.status(201).json({ message: 'Todo agregado exitosamente!', id: this.lastID });
+    });
+    stmt.finalize();
+});
 
 app.get('/', function (req, res) {
     //Enviamos de regreso la respuesta
